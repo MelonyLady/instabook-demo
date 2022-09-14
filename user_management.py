@@ -17,8 +17,13 @@ def add_user(username, display_name, pin):
     """
     with get_db_connection() as connection:
         with connection.cursor(dictionary=True) as cursor:
-            # Temporary code
-            pass
+            cursor.execute("""INSERT
+                                Into users
+                                (username, display_name, pin)
+                            VALUES (%s, %s, %s)""", [username, display_name, pin])
+            connection.commit()
+
+print(add_user("alip", "Ali P", "1234"))
 
 
 def username_available(username):
@@ -34,8 +39,10 @@ def username_available(username):
     """
     with get_db_connection() as connection:
         with connection.cursor(dictionary=True) as cursor:
-            # Temporary code
-            user = None
+            cursor.execute("""SELECT * 
+                            FROM users as u
+                            WHERE u.username = %s""", [username])
+            user = cursor.fetchone()
             return True if user is None else False
 
 
@@ -78,11 +85,14 @@ def search_users(name):
     """
     with get_db_connection() as connection:
         with connection.cursor(dictionary=True) as cursor:
-            # Temporary code
-            users = [
-                {'id': 1, 'username': 'somebody',     'display_name': 'Some Body',     'is_admin': True},
-                {'id': 2, 'username': 'somebodyelse', 'display_name': 'Somebody Else', 'is_admin': False},
-            ]
+            cursor.execute("""SELECT u.id,
+                                                u.username,
+                                                u.display_name,
+                                                u.is_admin
+                                           FROM users AS u
+                                          WHERE u.username LIKE CONCAT('%', %s, '%')
+                                             OR u.display_name LIKE CONCAT('%', %s, '%')""", [name, name])
+            users = cursor.fetchall()
             return users
 
 
